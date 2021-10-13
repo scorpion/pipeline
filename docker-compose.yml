@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+  # Caddy Proxy
+  caddy:
+    build:
+      context: "./docker/caddy"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/caddy/config/Caddyfile:/etc/caddy/Caddyfile
+      - ./build:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+  # Node JS Engine
+  node:
+    build:
+      context: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - node_app:/usr/src/app
+
+volumes:
+  # Caddy
+  caddy_data:
+  caddy_config:
+  # Node
+  node_app:
