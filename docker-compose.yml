@@ -19,6 +19,10 @@ volumes:
   vault_logs:
   # Prometheus
   prometheus_data:
+  # Redis
+  redis_data:
+  # RabbitMQ
+  rabbitmq_mnesia:
 
 # Docker Services
 services:
@@ -139,6 +143,8 @@ services:
     restart: unless-stopped
     ports:
       - '6379:6379'
+    volumes:
+      - redis_data:/data
     networks:
       - backend
     depends_on:
@@ -147,3 +153,21 @@ services:
       driver: 'fluentd'
       options:
         tag: redis
+
+  # RabbitMQ (Message Broker)
+  rabbitmq:
+    build:
+      context: './docker/rabbitmq'
+    restart: unless-stopped
+    volumes:
+      - rabbitmq_mnesia:/var/lib/rabbitmq
+    ports:
+      - '15672:15672'
+    networks:
+      - backend
+    depends_on:
+      - fluent-bit
+    logging:
+      driver: 'fluentd'
+      options:
+        tag: rabbitmq
