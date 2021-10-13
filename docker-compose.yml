@@ -12,12 +12,55 @@ volumes:
   # Caddy
   caddy_data:
   caddy_config:
+
   # Node
   node_app:
 
 # Docker Services
 services:
-  # Caddy Proxy
+  # Fluent-Bit (Logging)
+  fluent-bit:
+    build:
+      context: './docker/fluent-bit'
+    restart: unless-stopped
+    ports:
+      - '2020:2020'
+      - '24224:24224'
+      - '24224:24224/udp'
+    networks:
+      - backend
+
+  # Prometheus (Time Series DB)
+  prometheus:
+    build:
+      context: './docker/prometheus'
+    restart: unless-stopped
+    ports:
+      - '9090:9090'
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - fluent-bit
+    logging:
+      driver: 'fluentd'
+
+  # Grafana (Dashboards)
+  grafana:
+    build:
+      context: './docker/grafana'
+    restart: unless-stopped
+    ports:
+      - '9090:9090'
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - prometheus
+    logging:
+      driver: 'fluentd'
+
+  # Caddy (Proxy)
   caddy:
     build:
       context: './docker/caddy'
@@ -37,7 +80,8 @@ services:
       - fluent-bit
     logging:
       driver: 'fluentd'
-  # Node JS Engine
+
+  # Node (JS Engine)
   node:
     build:
       context: .
@@ -50,14 +94,3 @@ services:
       - fluent-bit
     logging:
       driver: 'fluentd'
-  # Grafana
-  # Fluent-Bit
-  fluent-bit:
-    build:
-      context: './docker/fluent-bit'
-    restart: unless-stopped
-    ports:
-      - '24224:24224'
-      - '24224:24224/udp'
-    networks:
-      - backend
