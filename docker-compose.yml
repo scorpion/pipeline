@@ -12,9 +12,10 @@ volumes:
   # Caddy
   caddy_data:
   caddy_config:
-
   # Node
   node_app:
+  # Vault
+  vault:
 
 # Docker Services
 services:
@@ -44,6 +45,8 @@ services:
       - fluent-bit
     logging:
       driver: 'fluentd'
+      options:
+        tag: prometheus
 
   # Grafana (Dashboards)
   grafana:
@@ -51,14 +54,17 @@ services:
       context: './docker/grafana'
     restart: unless-stopped
     ports:
-      - '9090:9090'
+      - '3001:3000'
     networks:
       - frontend
       - backend
     depends_on:
+      - fluent-bit
       - prometheus
     logging:
       driver: 'fluentd'
+      options:
+        tag: grafana
 
   # Caddy (Proxy)
   caddy:
@@ -80,6 +86,27 @@ services:
       - fluent-bit
     logging:
       driver: 'fluentd'
+      options:
+        tag: caddy
+
+  # Vault
+  vault:
+    build:
+      context: './docker/vault'
+    restart: unless-stopped
+    ports:
+      - '8200:8200'
+    volumes:
+      - vault:/vault
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - fluent-bit
+    logging:
+      driver: 'fluentd'
+      options:
+        tag: vault
 
   # Node (JS Engine)
   node:
@@ -94,3 +121,5 @@ services:
       - fluent-bit
     logging:
       driver: 'fluentd'
+      options:
+        tag: node
