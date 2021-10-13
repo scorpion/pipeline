@@ -1,2 +1,3 @@
 FROM vault:latest
 EXPOSE 3000
+EXPOSE 8200

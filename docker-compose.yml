@@ -15,7 +15,10 @@ volumes:
   # Node
   node_app:
   # Vault
-  vault:
+  vault_file:
+  vault_logs:
+  # Prometheus
+  prometheus_data:
 
 # Docker Services
 services:
@@ -38,6 +41,8 @@ services:
     restart: unless-stopped
     ports:
       - '9090:9090'
+    volumes:
+      - prometheus_data:/prometheus
     networks:
       - frontend
       - backend
@@ -97,7 +102,8 @@ services:
     ports:
       - '8200:8200'
     volumes:
-      - vault:/vault
+      - vault_file:/vault/file
+      - vault_logs:/vault/logs
     networks:
       - frontend
       - backend
@@ -113,6 +119,8 @@ services:
     build:
       context: .
     restart: unless-stopped
+    ports:
+      - '3000:3000'
     volumes:
       - node_app:/usr/src/app
     networks:
@@ -123,3 +131,19 @@ services:
       driver: 'fluentd'
       options:
         tag: node
+
+  # Redis (Caching)
+  redis:
+    build:
+      context: './docker/redis'
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    networks:
+      - backend
+    depends_on:
+      - fluent-bit
+    logging:
+      driver: 'fluentd'
+      options:
+        tag: redis
