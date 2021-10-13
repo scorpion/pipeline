@@ -33,6 +33,10 @@ services:
     networks:
       - frontend
       - backend
+    depends_on:
+      - fluent-bit
+    logging:
+      driver: 'fluentd'
   # Node JS Engine
   node:
     build:
@@ -40,5 +44,20 @@ services:
     restart: unless-stopped
     volumes:
       - node_app:/usr/src/app
+    networks:
+      - backend
+    depends_on:
+      - fluent-bit
+    logging:
+      driver: 'fluentd'
+  # Grafana
+  # Fluent-Bit
+  fluent-bit:
+    build:
+      context: './docker/fluent-bit'
+    restart: unless-stopped
+    ports:
+      - '24224:24224'
+      - '24224:24224/udp'
     networks:
       - backend
