@@ -6,6 +6,8 @@ networks:
     driver: bridge
   backend:
     driver: bridge
+  logging:
+    driver: bridge
 
 # Storage Volumes
 volumes:
@@ -17,12 +19,12 @@ volumes:
   # Vault
   vault_file:
   vault_logs:
-  # Prometheus
-  prometheus_data:
   # Redis
   redis_data:
   # RabbitMQ
   rabbitmq_mnesia:
+  # TimescaleDB
+  timescaledb_data:
 
 # Docker Services
 services:
@@ -37,6 +39,7 @@ services:
       - '24224:24224/udp'
     networks:
       - backend
+      - logging
 
   # Prometheus (Time Series DB)
   prometheus:
@@ -45,11 +48,13 @@ services:
     restart: unless-stopped
     ports:
       - '9090:9090'
+      - '9092:9092'
     volumes:
       - prometheus_data:/prometheus
     networks:
       - frontend
       - backend
+      - logging
     depends_on:
       - fluent-bit
     logging:
@@ -67,6 +72,7 @@ services:
     networks:
       - frontend
       - backend
+      - logging
     depends_on:
       - fluent-bit
       - prometheus
@@ -171,3 +177,21 @@ services:
       driver: 'fluentd'
       options:
         tag: rabbitmq
+
+  # TimescaleDB (Time Series DB)
+  timescaledb:
+    build:
+      context: './docker/timescaledb'
+    restart: unless-stopped
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      - backend
+    depends_on:
+      - fluent-bit
+    logging:
+      driver: 'fluentd'
+      options:
+        tag: timescaledb
