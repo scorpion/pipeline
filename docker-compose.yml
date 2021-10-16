@@ -114,8 +114,8 @@ services:
     networks:
       - backend
     environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: postgres
+      POSTGRES_USER: '${POSTGRES_USER:-postgres}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-password}'
 
   # Promscale (Logs Connector)
   promscale:
@@ -123,6 +123,7 @@ services:
       context: './docker/promscale'
     ports:
       - 9201:9201
+      - 9202:9202
     networks:
       - backend
     restart: unless-stopped
@@ -133,3 +134,59 @@ services:
       PROMSCALE_DB_CONNECT_RETRIES: 10
       PROMSCALE_WEB_TELEMETRY_PATH: /metrics-text
       PROMSCALE_DB_URI: postgres://postgres:password@timescaledb:5432/postgres?sslmode=allow
+
+  jaeger-collector:
+    build:
+      context: './docker/jaeger-collector'
+    command:
+      - '--cassandra.keyspace=jaeger_v1_dc1'
+      - '--cassandra.servers=cassandra'
+      - '--collector.zipkin.host-port=9411'
+      - '--sampling.initial-sampling-probability=.5'
+      - '--sampling.target-samples-per-second=.01'
+    environment:
+      - SAMPLING_CONFIG_TYPE=adaptive
+    ports:
+      - '14269:14269'
+      - '14268:14268'
+      - '14250'
+      - '9411:9411'
+    restart: unless-stopped
+    depends_on:
+      - cassandra-schema
+
+  jaeger-query:
+    build:
+      context: './docker/jaeger-query'
+    command: ['--cassandra.keyspace=jaeger_v1_dc1', '--cassandra.servers=cassandra']
+    ports:
+      - '16686:16686'
+      - '16687'
+    restart: unless-stopped
+    depends_on:
+      - cassandra-schema
+
+  jaeger-agent:
+    build:
+      context: './docker/jaeger-agent'
+    command: ['--reporter.grpc.host-port=jaeger-collector:14250']
+    ports:
+      - '5775:5775/udp'
+      - '6831:6831/udp'
+      - '6832:6832/udp'
+      - '5778:5778'
+    restart: unless-stopped
+    depends_on:
+      - jaeger-collector
+
+  cassandra:
+    build:
+      context: './docker/cassandra'
+    ports:
+      - '9042:9042'
+
+  cassandra-schema:
+    build:
+      context: './docker/cassandra-schema'
+    depends_on:
+      - cassandra
