@@ -20,18 +20,6 @@ volumes:
 
 # Docker Services
 services:
-  # Fluent-Bit (Logging)
-  fluent-bit:
-    build:
-      context: './docker/fluent-bit'
-    restart: unless-stopped
-    ports:
-      - '2020:2020'
-      - '24224:24224'
-      - '24224:24224/udp'
-    networks:
-      - backend
-
   # Prometheus (Time Series DB)
   prometheus:
     build:
@@ -45,12 +33,6 @@ services:
     networks:
       - frontend
       - backend
-    depends_on:
-      - fluent-bit
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: prometheus
 
   # Grafana (Dashboards)
   grafana:
@@ -65,12 +47,7 @@ services:
       - frontend
       - backend
     depends_on:
-      - fluent-bit
       - prometheus
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: grafana
 
   # Caddy (Proxy)
   caddy:
@@ -88,12 +65,6 @@ services:
     networks:
       - frontend
       - backend
-    depends_on:
-      - fluent-bit
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: caddy
 
   # Vault
   vault:
@@ -108,12 +79,6 @@ services:
     networks:
       - frontend
       - backend
-    depends_on:
-      - fluent-bit
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: vault
 
   # Node (JS Engine)
   node:
@@ -124,12 +89,6 @@ services:
       - '3000:3000'
     networks:
       - backend
-    depends_on:
-      - fluent-bit
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: node
 
   # RabbitMQ (Message Broker)
   rabbitmq:
@@ -142,12 +101,6 @@ services:
       - '15672:15672'
     networks:
       - backend
-    depends_on:
-      - fluent-bit
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: rabbitmq
 
   # TimescaleDB (Time Series DB)
   timescaledb:
@@ -160,10 +113,6 @@ services:
       - '5432:5432'
     networks:
       - backend
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: timescaledb
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
