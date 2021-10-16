@@ -6,25 +6,18 @@ networks:
     driver: bridge
   backend:
     driver: bridge
-  logging:
-    driver: bridge
 
 # Storage Volumes
 volumes:
-  # Caddy
-  caddy_data:
   caddy_config:
-  # Node
-  node_app:
-  # Vault
+  caddy_data:
+  grafana_data:
+  prometheus_data:
+  rabbitmq_mnesia:
+  redis_data:
+  timescaledb_data:
   vault_file:
   vault_logs:
-  # Redis
-  redis_data:
-  # RabbitMQ
-  rabbitmq_mnesia:
-  # TimescaleDB
-  timescaledb_data:
 
 # Docker Services
 services:
@@ -39,7 +32,6 @@ services:
       - '24224:24224/udp'
     networks:
       - backend
-      - logging
 
   # Prometheus (Time Series DB)
   prometheus:
@@ -54,7 +46,6 @@ services:
     networks:
       - frontend
       - backend
-      - logging
     depends_on:
       - fluent-bit
     logging:
@@ -69,10 +60,11 @@ services:
     restart: unless-stopped
     ports:
       - '3001:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
     networks:
       - frontend
       - backend
-      - logging
     depends_on:
       - fluent-bit
       - prometheus
@@ -110,7 +102,7 @@ services:
       context: './docker/vault'
     restart: unless-stopped
     ports:
-      - '8200:8200'
+      - '${VAULT_PORT}:${VAULT_PORT}'
     volumes:
       - vault_file:/vault/file
       - vault_logs:/vault/logs
@@ -131,8 +123,6 @@ services:
     restart: unless-stopped
     ports:
       - '3000:3000'
-    volumes:
-      - node_app:/usr/src/app
     networks:
       - backend
     depends_on:
@@ -189,9 +179,27 @@ services:
       - '5432:5432'
     networks:
       - backend
-    depends_on:
-      - fluent-bit
     logging:
       driver: 'fluentd'
       options:
         tag: timescaledb
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+
+  # Promscale (Logs Connector)
+  promscale:
+    build:
+      context: './docker/promscale'
+    ports:
+      - 9201:9201
+    networks:
+      - backend
+    restart: on-failure
+    depends_on:
+      - timescaledb
+      - prometheus
+    environment:
+      PROMSCALE_DB_CONNECT_RETRIES: 10
+      PROMSCALE_WEB_TELEMETRY_PATH: /metrics-text
+      PROMSCALE_DB_URI: postgres://postgres:password@timescaledb:5432/postgres?sslmode=allow

@@ -4,6 +4,7 @@
 <h1>App Management</h1>
 <ul>
 	<li><a href="http://localhost:3001" target="_blank">Grafana</a></li>
+	<li><a href="http://localhost:9001" target="_blank">Prometheus</a></li>
 	<li><a href="http://localhost:8200" target="_blank">Vault</a></li>
 	<li><a href="http://localhost:15672" target="_blank">RabbitMQ</a></li>
 </ul>
