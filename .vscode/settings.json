@@ -6,9 +6,8 @@
 			"port": 5432,
 			"driver": "PostgreSQL",
 			"name": "TimescaleDB",
-			"database": "postgres",
-			"username": "postgres",
-			"password": "password"
+			"database": "timescaledb",
+			"username": "postgres"
 		}
 	]
 }
