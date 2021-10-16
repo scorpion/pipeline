@@ -14,7 +14,6 @@ volumes:
   grafana_data:
   prometheus_data:
   rabbitmq_mnesia:
-  redis_data:
   timescaledb_data:
   vault_file:
   vault_logs:
@@ -131,24 +130,6 @@ services:
       driver: 'fluentd'
       options:
         tag: node
-
-  # Redis (Caching)
-  redis:
-    build:
-      context: './docker/redis'
-    restart: unless-stopped
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
-    networks:
-      - backend
-    depends_on:
-      - fluent-bit
-    logging:
-      driver: 'fluentd'
-      options:
-        tag: redis
 
   # RabbitMQ (Message Broker)
   rabbitmq:
