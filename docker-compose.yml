@@ -135,6 +135,14 @@ services:
       PROMSCALE_WEB_TELEMETRY_PATH: /metrics-text
       PROMSCALE_DB_URI: postgres://postgres:password@timescaledb:5432/postgres?sslmode=allow
 
+  #  promscale-jaeger:
+  #    build:
+  #      context: './docker/promscale-jaeger'
+  #    networks:
+  #      - frontend
+  #      - backend
+  #    restart: unless-stopped
+
   jaeger-collector:
     build:
       context: './docker/jaeger-collector'

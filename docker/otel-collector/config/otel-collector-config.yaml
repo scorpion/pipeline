@@ -1,0 +1,41 @@
+receivers:
+  jaeger:
+    protocols:
+      grpc:
+      thrift_http:
+
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+  zipkin:
+
+exporters:
+  otlp:
+    endpoint: 'promscale:9202'
+    insecure: true
+
+processors:
+  batch:
+    send_batch_size: 4
+    send_batch_max_size: 8
+
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1888
+  zpages:
+    endpoint: :55679
+
+service:
+  extensions: [pprof, zpages, health_check]
+  pipelines:
+    traces:
+      receivers: [jaeger, otlp, zipkin]
+      exporters: [otlp]
+      processors: [batch]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
