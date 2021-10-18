@@ -158,7 +158,7 @@ services:
       - '14269:14269'
       - '14268:14268'
       - '14250'
-      - '9411:9411'
+      - '9411:9411' # Zipkin
     restart: unless-stopped
     depends_on:
       - cassandra-schema

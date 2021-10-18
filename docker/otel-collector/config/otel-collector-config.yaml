@@ -1,9 +1,4 @@
 receivers:
-  jaeger:
-    protocols:
-      grpc:
-      thrift_http:
-
   otlp:
     protocols:
       grpc:
@@ -32,7 +27,7 @@ service:
   extensions: [pprof, zpages, health_check]
   pipelines:
     traces:
-      receivers: [jaeger, otlp, zipkin]
+      receivers: [otlp, zipkin] # jaeger, otlp, zipkin
       exporters: [otlp]
       processors: [batch]
     metrics:
