@@ -3,7 +3,6 @@ version: '3'
 # Networking
 networks:
   default:
-    external: true
     name: backend
   frontend:
     driver: bridge
@@ -14,6 +13,7 @@ networks:
 volumes:
   caddy_config:
   caddy_data:
+  cassandra_data:
   grafana_data:
   prometheus_data:
   rabbitmq_mnesia:
@@ -202,6 +202,8 @@ services:
       context: './docker/cassandra'
     ports:
       - '9042:9042'
+    volumes:
+      - cassandra_data:/var/lib/cassandra
     networks:
       - backend
 
@@ -212,3 +214,49 @@ services:
       - cassandra
     networks:
       - backend
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: concourse
+      POSTGRES_USER: concourse_user
+      POSTGRES_PASSWORD: concourse_pass
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '5'
+        max-size: '10m'
+
+  concourse-web:
+    image: concourse/concourse
+    command: web
+    links: [postgres]
+    depends_on: [postgres]
+    ports: ['8081:8080']
+    volumes: ['./keys/web:/concourse-keys']
+    environment:
+      CONCOURSE_EXTERNAL_URL: http://localhost:8081
+      CONCOURSE_POSTGRES_HOST: postgres
+      CONCOURSE_POSTGRES_USER: concourse_user
+      CONCOURSE_POSTGRES_PASSWORD: concourse_pass
+      CONCOURSE_POSTGRES_DATABASE: concourse
+      CONCOURSE_ADD_LOCAL_USER: admin:password
+      CONCOURSE_MAIN_TEAM_LOCAL_USER: admin
+      CONCOURSE_SESSION_SIGNING_KEY: /concourse-keys/session_signing_key
+      CONCOURSE_TSA_HOST_KEY: /concourse-keys/tsa_host_key
+      CONCOURSE_TSA_AUTHORIZED_KEYS: /concourse-keys/authorized_worker_keys
+
+  concourse-worker:
+    image: concourse/concourse
+    command: worker
+    privileged: true
+    depends_on: [concourse-web]
+    volumes: ['./keys/worker:/concourse-keys']
+    links: [concourse-web]
+    stop_signal: SIGUSR2
+    environment:
+      CONCOURSE_TSA_HOST: concourse-web:2222
+      # enable DNS proxy to support Docker's 127.x.x.x DNS server
+      CONCOURSE_GARDEN_DNS_PROXY_ENABLE: 'true'
+      CONCOURSE_TSA_PUBLIC_KEY: /concourse-keys/tsa_host_key.pub
+      CONCOURSE_TSA_WORKER_PRIVATE_KEY: /concourse-keys/worker_key
