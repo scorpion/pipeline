@@ -2,6 +2,9 @@ version: '3'
 
 # Networking
 networks:
+  default:
+    external: true
+    name: backend
   frontend:
     driver: bridge
   backend:
@@ -86,7 +89,7 @@ services:
       context: .
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - '3000'
     networks:
       - backend
 
@@ -162,6 +165,8 @@ services:
     restart: unless-stopped
     depends_on:
       - cassandra-schema
+    networks:
+      - backend
 
   jaeger-query:
     build:
@@ -173,6 +178,9 @@ services:
     restart: unless-stopped
     depends_on:
       - cassandra-schema
+    networks:
+      - backend
+      - frontend
 
   jaeger-agent:
     build:
@@ -186,15 +194,21 @@ services:
     restart: unless-stopped
     depends_on:
       - jaeger-collector
+    networks:
+      - backend
 
   cassandra:
     build:
       context: './docker/cassandra'
     ports:
       - '9042:9042'
+    networks:
+      - backend
 
   cassandra-schema:
     build:
       context: './docker/cassandra-schema'
     depends_on:
       - cassandra
+    networks:
+      - backend
