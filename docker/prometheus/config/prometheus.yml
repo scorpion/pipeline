@@ -12,6 +12,9 @@ scrape_configs:
     static_configs:
       - targets:
           - docker.for.mac.host.internal:8080
+  - job_name: postgres-exporter
+    static_configs:
+      - targets: ['postgres-exporter:9187']
 remote_write:
   - url: 'http://promscale:9201/write'
 remote_read:

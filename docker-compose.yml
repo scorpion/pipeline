@@ -37,6 +37,21 @@ services:
       - frontend
       - backend
 
+  # postgres-exporter
+  postgres-exporter:
+    build:
+      context: './docker/postgres-exporter'
+    ports:
+      - 9187:9187
+    networks:
+      - backend
+    restart: unless-stopped
+    depends_on:
+      - timescaledb
+      - prometheus
+    environment:
+      DATA_SOURCE_NAME: postgres://postgres:password@timescaledb:5432/postgres?sslmode=allow
+
   # Grafana (Dashboards)
   grafana:
     build:

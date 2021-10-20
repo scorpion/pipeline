@@ -4,6 +4,7 @@
 <h1>App Management</h1>
 <ul>
 	<li><a href="http://localhost:1337" target="_blank">API</a></li>
+	<li><a href="http://localhost:4567" target="_blank">Wiki</a></li>
 	<li><a href="http://localhost:8081" target="_blank">Concourse</a></li>
 	<li><a href="http://localhost:3001" target="_blank">Grafana</a></li>
 	<li><a href="http://localhost:9090" target="_blank">Prometheus</a></li>
