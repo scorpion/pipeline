@@ -61,11 +61,23 @@ services:
       - '3001:3000'
     volumes:
       - grafana_data:/var/lib/grafana
+      #- ./docker/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/rabbitmq.yaml
+      #- ./docker/grafana/datasources.yml:/etc/grafana/provisioning/datasources/prometheus.yaml
+      #- ./docker/grafana/dashboards:/dashboards
     networks:
       - frontend
       - backend
     depends_on:
       - prometheus
+    environment:
+      # https://grafana.com/plugins/flant-statusmap-panel
+      # https://grafana.com/plugins/grafana-piechart-panel
+      # https://grafana.com/plugins/grafana-polystat-panel
+      # https://grafana.com/plugins/jdbranham-diagram-panel
+      # https://grafana.com/plugins/michaeldmoore-multistat-panel
+      # https://grafana.com/plugins/vonage-status-panel
+      # https://grafana.com/plugins/yesoreyeram-boomtable-panel
+      GF_INSTALL_PLUGINS: 'flant-statusmap-panel,grafana-piechart-panel'
 
   # Caddy (Proxy)
   caddy:
@@ -116,9 +128,14 @@ services:
     volumes:
       - rabbitmq_mnesia:/var/lib/rabbitmq
     ports:
-      - '15672:15672'
+      - '15672:15672' # UI
+      - '15692:15692' # Prometheus /metrics
+      - '5672:5672' # AMQP Messages
     networks:
       - backend
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=secret
 
   # TimescaleDB (Time Series DB)
   timescaledb:
@@ -160,6 +177,24 @@ services:
   #      - frontend
   #      - backend
   #    restart: unless-stopped
+
+  hasura:
+    build:
+      context: './docker/hasura'
+    command:
+      - graphql-engine
+      - serve
+      - --enable-console
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:password@timescaledb:5432/postgres?sslmode=allow
+    ports:
+      - 8082:8080
+    restart: unless-stopped
+    depends_on:
+      - timescaledb
+    networks:
+      - backend
+      - frontend
 
   jaeger-collector:
     build:
