@@ -15,6 +15,7 @@ volumes:
   caddy_data:
   cassandra_data:
   grafana_data:
+  neo4j_data:
   prometheus_data:
   rabbitmq_mnesia:
   timescaledb_data:
@@ -300,3 +301,18 @@ services:
       CONCOURSE_GARDEN_DNS_PROXY_ENABLE: 'true'
       CONCOURSE_TSA_PUBLIC_KEY: /concourse-keys/tsa_host_key.pub
       CONCOURSE_TSA_WORKER_PRIVATE_KEY: /concourse-keys/worker_key
+
+  neo4j:
+    build:
+      context: './docker/neo4j'
+    environment:
+      NEO4J_AUTH: none
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - neo4j_data:/data
+    restart: unless-stopped
+    networks:
+      - backend
+      - frontend

@@ -4,6 +4,7 @@
 <h1>App Management</h1>
 <ul>
 	<li><a href="http://localhost:1337" target="_blank">API</a></li>
+	<li><a href="http://localhost:7474" target="_blank">Neo4j</a></li>
 	<li><a href="http://localhost:8082" target="_blank">Hasura</a></li>
 	<li><a href="http://localhost:4567" target="_blank">Wiki</a></li>
 	<li><a href="http://localhost:8081" target="_blank">Concourse</a></li>
